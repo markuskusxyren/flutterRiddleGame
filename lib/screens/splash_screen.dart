@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -50,18 +49,22 @@ class _SplashScreenState extends State<SplashScreen>
           Center(
             child: RotationTransition(
               turns: Tween(begin: 0.0, end: 1.0).animate(animationController),
-              child: Image.asset(
-                'lib/images/logoouter.png',
-                width: 350,
-                height: 350,
+              child: FractionallySizedBox(
+                widthFactor: 0.8, // change as needed
+                heightFactor: 0.8, // change as needed
+                child: Image.asset(
+                  'lib/images/logoouter.png',
+                  width: 200,
+                  height: 200,
+                ),
               ),
             ),
           ),
           Positioned(
             child: Image.asset(
               'lib/images/logoinner.png',
-              width: 50,
-              height: 50,
+              width: 25,
+              height: 25,
             ),
           ),
         ],
