@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 
@@ -10,6 +11,10 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
+void playCorrectSound() async {}
+
+void playWrongSound() async {}
+
 class _GameScreenState extends State<GameScreen> {
   int currentLevel = 1;
   int wrongAnswers = 0;
@@ -17,6 +22,9 @@ class _GameScreenState extends State<GameScreen> {
 
   final random = Random();
   int correctAnswers = 0;
+
+  Timer? timer;
+  int timerDuration = 15;
 
   final List<Map<String, dynamic>> levels = [
     {
@@ -73,78 +81,73 @@ class _GameScreenState extends State<GameScreen> {
     },
     {
       'question': "What has keys but can't open locks?",
-      'answer': "Piano",
+      'answer': 'Piano',
       'choices': ['Keyboard', 'Safe', 'Chest']
     },
     {
       'question': "I can be cracked, made, told, and played. What am I?",
-      'answer': "Joke",
+      'answer': 'Joke',
       'choices': ['Song', 'Poem', 'Riddle']
     },
     {
       'question': "What belongs to you but is used more by others?",
-      'answer': "Name",
+      'answer': 'Name',
       'choices': ['Money', 'Time', 'House']
     },
     {
       'question':
           "I can fly without wings. I can cry without eyes. Wherever I go, darkness follows me. What am I?",
-      'answer': "Cloud",
+      'answer': 'Cloud',
       'choices': ['Bird', 'Airplane', 'Rain']
     },
     {
       'question':
           "What has cities but no houses, forests but no trees, and rivers but no water?",
-      'answer': "Map",
+      'answer': 'Map',
       'choices': ['Book', 'Globe', 'Painting']
     },
     {
       'question':
           "I am taken from a mine, and shut in a wooden case, from which I am never released, and yet I am used by almost every person. What am I?",
-      'answer': "Pencil",
+      'answer': 'Pencil',
       'choices': ['Pen', 'Eraser', 'Marker']
     },
     {
       'question': "What can travel around the world while staying in a corner?",
-      'answer': "Stamp",
+      'answer': 'Stamp',
       'choices': ['Coin', 'Ticket', 'Passport']
     },
     {
       'question':
           "What has a face that doesn't smile, a back that doesn't break, and two arms that don't move?",
-      'answer': "Clock",
+      'answer': 'Clock',
       'choices': ['Mirror', 'Doll', 'Statue']
     },
     {
       'question': "What can you catch but not throw?",
-      'answer': "Cold",
+      'answer': 'Cold',
       'choices': ['Ball', 'Fish', 'Butterfly']
     },
     {
       'question': "What has a thumb and four fingers but is not alive?",
-      'answer': "Glove",
+      'answer': 'Glove',
       'choices': ['Hand', 'Foot', 'Sock']
     },
     {
       'question':
           "I have cities but no houses, forests but no trees, and rivers but no water. What am I?",
-      'answer': "Globe",
+      'answer': 'Globe',
       'choices': ['Planet', 'Country', 'Continent']
     },
     {
       'question': "The more you take, the more you leave behind. What am I?",
-      'answer': "Footsteps",
+      'answer': 'Footsteps',
       'choices': ['Breath', 'Steps', 'Shadows']
     },
     {
       'question': "What has keys but no locks?",
       'answer': 'Keyboard',
       'choices': ['Car', 'Door', 'Safe']
-    },
-    {
-      'question': "What is full of holes but can still hold water?",
-      'answer': 'Sponge',
-      'choices': ['Net', 'Basket', 'Cup']
     },
     {
       'question':
@@ -154,7 +157,7 @@ class _GameScreenState extends State<GameScreen> {
     },
     {
       'question': "What has no beginning, end, or middle?",
-      'answer': "Circle",
+      'answer': 'Circle',
       'choices': ["Line", "Square", "Triangle"]
     }
   ];
@@ -163,6 +166,71 @@ class _GameScreenState extends State<GameScreen> {
   void initState() {
     super.initState();
     setRandomLevel();
+    startTimer();
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
+
+  void startTimer() {
+    timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
+      setState(() {
+        if (timerDuration > 0) {
+          timerDuration--;
+        } else if (wrongAnswers >= 2) {
+          wrongAnswers++;
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return Center(
+                child: SimpleDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  title: const Text("Game Over"),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Column(
+                        children: [
+                          const Text("You have reached 3 mistakes."),
+                          const SizedBox(height: 16),
+                          Text("Correct Answers: $correctAnswers"),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        resetGame(); // Reset the game
+                      },
+                      child: const Text("Restart"),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+          // Stop the timer
+          timer.cancel();
+        } else {
+          // Timer is up, reset timer and set random level
+          wrongAnswers++;
+          resetTimer();
+          setRandomLevel();
+        }
+      });
+    });
+  }
+
+  void resetTimer() {
+    setState(() {
+      timerDuration = 15;
+    });
   }
 
   void setRandomLevel() {
@@ -181,8 +249,6 @@ class _GameScreenState extends State<GameScreen> {
       currentLevelData['choices'][1],
       currentLevelData['choices'][2],
     ];
-
-    answerOptions.shuffle();
 
     return Scaffold(
       body: SafeArea(
@@ -254,6 +320,34 @@ class _GameScreenState extends State<GameScreen> {
                 },
               ),
             ),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: SizedBox(
+                width: 50,
+                height: 50,
+                child: CircularProgressIndicator(
+                  value: timerDuration / 15, // Update this value as needed
+                  strokeWidth: 10,
+                  backgroundColor: Colors.grey,
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: SizedBox(
+                width: 50,
+                height: 50,
+                child: Center(
+                  child: Text(
+                    timerDuration.toString(),
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -266,53 +360,60 @@ class _GameScreenState extends State<GameScreen> {
 
     if (answer == correctAnswer) {
       setState(() {
+        playCorrectSound();
         correctAnswers++; // Increment correct answers
+        resetTimer();
       });
       setRandomLevel();
     } else {
       setState(() {
+        playWrongSound();
         wrongAnswers++;
-      });
-      setRandomLevel();
-      if (wrongAnswers >= 3) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return Center(
-              child: SimpleDialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                title: const Text("Game Over"),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Column(
-                      children: [
-                        const Text("You have reached 3 mistakes."),
-                        const SizedBox(height: 16),
-                        Text("Correct Answers: $correctAnswers"),
-                      ],
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      resetGame(); // Reset the game
-                    },
-                    child: const Text("Restart"),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      }
-
-      setState(() {
         selectedAnswer = answer;
       });
+      resetTimer();
+      setRandomLevel();
+    }
+    checkGameOver(); // Check if the game is over
+  }
+
+  void checkGameOver() {
+    if (wrongAnswers >= 3) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return Center(
+            child: SimpleDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: const Text("Game Over"),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Column(
+                    children: [
+                      const Text("You have reached 3 mistakes."),
+                      const SizedBox(height: 16),
+                      Text("Correct Answers: $correctAnswers"),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    resetGame(); // Reset the game
+                  },
+                  child: const Text("Restart"),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+      // Stop the timer
+      timer?.cancel();
     }
   }
 
@@ -323,5 +424,7 @@ class _GameScreenState extends State<GameScreen> {
       setRandomLevel();
       selectedAnswer = '';
     });
+    resetTimer(); // Reset the timer
+    startTimer(); // Start the timer again
   }
 }
