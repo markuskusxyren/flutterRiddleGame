@@ -26,6 +26,20 @@ class _GameScreenState extends State<GameScreen> {
   Timer? timer;
   int timerDuration = 15;
 
+  List shuffledOptions = [];
+
+  List getAnswerOptions() {
+    final currentLevelData = levels[currentLevel - 1];
+    final answerOptions = [
+      currentLevelData['answer'],
+      currentLevelData['choices'][0],
+      currentLevelData['choices'][1],
+      currentLevelData['choices'][2],
+    ];
+    answerOptions.shuffle(); // Shuffle the answer options
+    return answerOptions;
+  }
+
   final List<Map<String, dynamic>> levels = [
     {
       'question': 'What has to be broken before you use it?',
@@ -159,6 +173,27 @@ class _GameScreenState extends State<GameScreen> {
       'question': "What has no beginning, end, or middle?",
       'answer': 'Circle',
       'choices': ["Line", "Square", "Triangle"]
+    },
+    {
+      'question': "You can't see me, but you can't live without me. What am I?",
+      'answer': 'Air',
+      'choices': ['Mountain', 'Water', 'Fire']
+    },
+    {
+      'question':
+          "Only one color, but not one size, stuck at the bottom, yet easily flies, present in the sun, but not in rain, doing no harm, and feeling no pain. What is it?",
+      'answer': 'Shadow',
+      'choices': ['Cat', 'Moon', 'Sun']
+    },
+    {
+      'question': "What building has the most stories?",
+      'answer': 'Library',
+      'choices': ['Restaurant', 'Department', 'Cafe']
+    },
+    {
+      'question': "What has words, but never speaks?",
+      'answer': 'Book',
+      'choices': ['Graffiti', 'Letter', 'Keyboard']
     }
   ];
 
@@ -175,53 +210,70 @@ class _GameScreenState extends State<GameScreen> {
     super.dispose();
   }
 
+  void shuffleOptions() {
+    setState(() {
+      getAnswerOptions();
+    });
+  }
+
   void startTimer() {
-    timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
+    timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) async {
       setState(() {
         if (timerDuration > 0) {
           timerDuration--;
-        } else if (wrongAnswers >= 2) {
+        } else {
           wrongAnswers++;
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (BuildContext context) {
-              return Center(
-                child: SimpleDialog(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  title: const Text("Game Over"),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Column(
-                        children: [
-                          const Text("You have reached 3 mistakes."),
-                          const SizedBox(height: 16),
-                          Text("Correct Answers: $correctAnswers"),
-                        ],
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        resetGame(); // Reset the game
-                      },
-                      child: const Text("Restart"),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
           // Stop the timer
           timer.cancel();
-        } else {
-          // Timer is up, reset timer and set random level
-          wrongAnswers++;
-          resetTimer();
-          setRandomLevel();
+          if (wrongAnswers >= 2) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext context) {
+                return Center(
+                  child: SimpleDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    title: const Text("Game Over"),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Column(
+                          children: [
+                            const Text("You have reached 3 mistakes."),
+                            const SizedBox(height: 16),
+                            Text("Correct Answers: $correctAnswers"),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          resetGame(); // Reset the game
+                        },
+                        child: const Text("Restart"),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          } else {
+            wrongAnswers++;
+            setState(() {
+              selectedAnswer = levels[currentLevel - 1]['answer'];
+            });
+
+            Future.delayed(const Duration(milliseconds: 3000), () {
+              setState(() {
+                resetTimer();
+                setRandomLevel();
+                shuffleOptions();
+              });
+              startTimer(); // Start the timer again
+            });
+          }
         }
       });
     });
@@ -236,6 +288,7 @@ class _GameScreenState extends State<GameScreen> {
   void setRandomLevel() {
     setState(() {
       currentLevel = random.nextInt(levels.length) + 1;
+      shuffledOptions = getAnswerOptions();
     });
   }
 
@@ -243,12 +296,8 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) {
     final currentLevelData = levels[currentLevel - 1];
     final String question = currentLevelData['question'];
-    final List<String> answerOptions = [
-      currentLevelData['answer'],
-      currentLevelData['choices'][0],
-      currentLevelData['choices'][1],
-      currentLevelData['choices'][2],
-    ];
+    final List answerOptions = shuffledOptions;
+    final String correctAnswer = currentLevelData['answer'];
 
     return Scaffold(
       body: SafeArea(
@@ -277,7 +326,9 @@ class _GameScreenState extends State<GameScreen> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           backgroundColor: selectedAnswer == answerOption
-                              ? Colors.blue
+                              ? (selectedAnswer == correctAnswer
+                                  ? Colors.green
+                                  : Colors.blue)
                               : null,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 30,
@@ -361,8 +412,9 @@ class _GameScreenState extends State<GameScreen> {
     if (answer == correctAnswer) {
       setState(() {
         playCorrectSound();
-        correctAnswers++; // Increment correct answers
+        correctAnswers++;
         resetTimer();
+        selectedAnswer = answer;
       });
       setRandomLevel();
     } else {
@@ -371,10 +423,21 @@ class _GameScreenState extends State<GameScreen> {
         wrongAnswers++;
         selectedAnswer = answer;
       });
+
+      setState(() {
+        selectedAnswer = correctAnswer;
+      });
+
+      await Future.delayed(const Duration(milliseconds: 1500));
+
+      setState(() {
+        selectedAnswer = '';
+      });
       resetTimer();
       setRandomLevel();
+      shuffleOptions();
     }
-    checkGameOver(); // Check if the game is over
+    checkGameOver();
   }
 
   void checkGameOver() {
