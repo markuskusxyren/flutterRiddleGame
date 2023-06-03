@@ -222,7 +222,6 @@ class _GameScreenState extends State<GameScreen> {
         if (timerDuration > 0) {
           timerDuration--;
         } else {
-          wrongAnswers++;
           // Stop the timer
           timer.cancel();
           if (wrongAnswers >= 2) {
