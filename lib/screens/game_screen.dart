@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({Key? key}) : super(key: key);
@@ -11,9 +12,17 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-void playCorrectSound() async {}
+AudioCache audioCache = AudioCache();
 
-void playWrongSound() async {}
+final player = AudioPlayer();
+
+void playCorrectSound() {
+  player.play(AssetSource('sounds/correct_sound.mp3'));
+}
+
+void playWrongSound() {
+  player.play(AssetSource('sounds/wrong_sound.mp3'));
+}
 
 class _GameScreenState extends State<GameScreen> {
   int currentLevel = 1;
@@ -202,6 +211,8 @@ class _GameScreenState extends State<GameScreen> {
     super.initState();
     setRandomLevel();
     startTimer();
+    audioCache.load('sounds/correct_sound.mp3');
+    audioCache.load('sounds/wrong_sound.mp3');
   }
 
   @override
@@ -224,6 +235,7 @@ class _GameScreenState extends State<GameScreen> {
         } else {
           // Stop the timer
           timer.cancel();
+          playWrongSound();
           if (wrongAnswers >= 2) {
             showDialog(
               context: context,
@@ -296,7 +308,6 @@ class _GameScreenState extends State<GameScreen> {
     final currentLevelData = levels[currentLevel - 1];
     final String question = currentLevelData['question'];
     final List answerOptions = shuffledOptions;
-    final String correctAnswer = currentLevelData['answer'];
 
     return Scaffold(
       body: SafeArea(
@@ -305,6 +316,7 @@ class _GameScreenState extends State<GameScreen> {
             Container(
               alignment: Alignment.center,
               padding: const EdgeInsets.all(20),
+              color: const Color.fromARGB(255, 57, 90, 64),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -313,33 +325,54 @@ class _GameScreenState extends State<GameScreen> {
                   Text(
                     question,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 20),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      color: Color.fromARGB(255, 253, 253, 253),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 25),
                   for (String answerOption in answerOptions)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          image: const DecorationImage(
+                            image: AssetImage('lib/images/wood.jpg'),
+                            repeat: ImageRepeat.repeat,
+                            fit: BoxFit.cover,
+                            scale: 2,
                           ),
-                          backgroundColor: selectedAnswer == answerOption
-                              ? (selectedAnswer == correctAnswer
-                                  ? Colors.green
-                                  : Colors.blue)
-                              : null,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 30,
-                            vertical: 15,
-                          ),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        onPressed: () {
-                          selectAnswer(answerOption);
-                        },
-                        child: Text(
-                          answerOption,
-                          style: const TextStyle(fontSize: 20),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: BorderSide(
+                                color: selectedAnswer == answerOption
+                                    ? Colors.green
+                                    : const Color.fromARGB(255, 34, 18, 0),
+                                width: 5,
+                              ),
+                            ),
+                            backgroundColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 30,
+                              vertical: 15,
+                            ),
+                          ),
+                          onPressed: () {
+                            selectAnswer(answerOption);
+                          },
+                          child: Text(
+                            answerOption,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              color: Color.fromARGB(255, 34, 18, 0),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -357,30 +390,35 @@ class _GameScreenState extends State<GameScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
             Positioned(
               top: 10,
-              left: 10,
+              left: 1,
               child: IconButton(
                 icon: const Icon(Icons.arrow_back),
+                color: const Color.fromARGB(255, 34, 18, 0),
+                iconSize: 40,
                 onPressed: () {
                   Navigator.pop(context);
                 },
               ),
             ),
             Positioned(
-              top: 10,
-              right: 10,
+              top: 15,
+              right: 15,
               child: SizedBox(
-                width: 50,
-                height: 50,
+                width: 40,
+                height: 40,
                 child: CircularProgressIndicator(
                   value: timerDuration / 15, // Update this value as needed
                   strokeWidth: 10,
-                  backgroundColor: Colors.grey,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+                  backgroundColor: const Color.fromARGB(255, 57, 90, 64),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    Color.fromARGB(255, 34, 18, 0),
+                  ),
                 ),
               ),
             ),
@@ -393,7 +431,10 @@ class _GameScreenState extends State<GameScreen> {
                 child: Center(
                   child: Text(
                     timerDuration.toString(),
-                    style: const TextStyle(fontSize: 16),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Color.fromARGB(255, 255, 255, 255),
+                    ),
                   ),
                 ),
               ),
@@ -415,6 +456,7 @@ class _GameScreenState extends State<GameScreen> {
         resetTimer();
         selectedAnswer = answer;
       });
+      await Future.delayed(const Duration(milliseconds: 1500));
       setRandomLevel();
     } else {
       setState(() {
