@@ -298,8 +298,13 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void setRandomLevel() {
+    int randomLevel;
+    do {
+      randomLevel = random.nextInt(levels.length) + 1;
+    } while (randomLevel == currentLevel);
+
     setState(() {
-      currentLevel = random.nextInt(levels.length) + 1;
+      currentLevel = randomLevel;
       shuffledOptions = getAnswerOptions();
     });
   }
