@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/services.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({Key? key}) : super(key: key);
@@ -308,6 +309,13 @@ class _GameScreenState extends State<GameScreen> {
     final currentLevelData = levels[currentLevel - 1];
     final String question = currentLevelData['question'];
     final List answerOptions = shuffledOptions;
+
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor:
+            Color.fromARGB(255, 57, 90, 64), // Set the desired color here
+      ),
+    );
 
     return Scaffold(
       body: SafeArea(

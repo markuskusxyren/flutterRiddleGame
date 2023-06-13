@@ -15,7 +15,7 @@ class CreditsScreen extends StatelessWidget {
     ),
     Member(
       name: 'Daranciang, Angelica T.',
-      image: const AssetImage('lib/images/markus.png'),
+      image: const AssetImage('lib/images/angelica.png'),
     ),
     Member(
       name: 'Franco, Markus Xyren L.',
@@ -66,7 +66,7 @@ class CreditsScreen extends StatelessWidget {
                         'Group Members',
                         style: TextStyle(
                           fontSize: 25,
-                          color: Color.fromARGB(255, 34, 18, 0),
+                          color: Color.fromARGB(255, 209, 209, 209),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -91,18 +91,48 @@ class CreditsScreen extends StatelessWidget {
                                       scale: 2,
                                     ),
                                     borderRadius: BorderRadius.circular(30.0),
+                                    border: Border.all(
+                                      color: const Color.fromARGB(
+                                        255,
+                                        34,
+                                        18,
+                                        0,
+                                      ),
+                                      width: 8,
+                                    ),
                                   ),
                                   child: ListTile(
                                     leading: ClipOval(
-                                      // Clip the image into a circle shape
-                                      child: Image(image: member.image),
-                                    ),
+                                        child: Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: const Color.fromARGB(
+                                            255,
+                                            34,
+                                            18,
+                                            0,
+                                          ),
+                                          width: 5,
+                                        ),
+                                      ),
+                                      child: ClipOval(
+                                        child: Container(
+                                          color:
+                                              const Color.fromARGB(255, 0, 0, 0)
+                                                  .withOpacity(.5),
+                                          child: ClipOval(
+                                            child: Image(image: member.image),
+                                          ),
+                                        ),
+                                      ),
+                                    )),
                                     title: Align(
                                       alignment: Alignment.centerRight,
                                       child: Text(
                                         member.name,
                                         style: const TextStyle(
-                                          fontSize: 20,
+                                          fontSize: 18,
                                           color: Color.fromARGB(255, 34, 18, 0),
                                           fontWeight: FontWeight.bold,
                                         ),

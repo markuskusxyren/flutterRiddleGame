@@ -9,6 +9,7 @@ bool isPlaying = false;
 bool isMuted = false;
 
 void playBackgroundSound() async {
+  player.setVolume(.5);
   await audioCache.load('sounds/song.mp3');
   player.play(AssetSource('sounds/song.mp3'));
   player.setReleaseMode(ReleaseMode.loop);
@@ -201,19 +202,25 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ],
             ),
           ),
-          Positioned(
-            top: 20,
-            right: 20,
-            child: IconButton(
-              icon: Icon(
-                isMuted ? Icons.volume_off : Icons.volume_up,
-                color: const Color.fromARGB(255, 34, 18, 0),
-              ),
-              onPressed: () {
-                setState(() {
-                  toggleMute();
-                });
-              },
+          SafeArea(
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 20,
+                  right: 20,
+                  child: IconButton(
+                    icon: Icon(
+                      isMuted ? Icons.volume_off : Icons.volume_up,
+                      color: const Color.fromARGB(255, 34, 18, 0),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        toggleMute();
+                      });
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
           Positioned(
